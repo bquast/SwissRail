@@ -12,19 +12,20 @@ import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.Rect
-import android.os.Bundle
-import android.os.Handler
-import android.os.Message
+import android.os.*
 import androidx.palette.graphics.Palette
 import android.support.wearable.watchface.CanvasWatchFaceService
 import android.support.wearable.watchface.WatchFaceService
 import android.support.wearable.watchface.WatchFaceStyle
 import android.view.SurfaceHolder
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 
 import java.lang.ref.WeakReference
 import java.util.Calendar
 import java.util.TimeZone
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Updates rate in milliseconds for interactive mode. We update once a second to advance the
@@ -64,7 +65,7 @@ class MyWatchFace : CanvasWatchFaceService() {
         return Engine()
     }
 
-    private class EngineHandler(reference: MyWatchFace.Engine) : Handler() {
+    private class EngineHandler(reference: MyWatchFace.Engine) : Handler(Looper.getMainLooper()) {
         private val mWeakReference: WeakReference<MyWatchFace.Engine> = WeakReference(reference)
 
         override fun handleMessage(msg: Message) {
@@ -320,7 +321,7 @@ class MyWatchFace : CanvasWatchFaceService() {
              * protection (slight movements in pixels, not great for images going all the way to
              * edges) and low ambient mode (degrades image quality).
              *
-             * Also, if your watch face will know about all images ahead of time (users aren"t
+             * Also, if your watch face will know about all images ahead of time (users aren't
              * selecting their own photos for the watch face), it will be more
              * efficient to create a black/white version (png, etc.) and load that when you need it.
              */
@@ -395,10 +396,10 @@ class MyWatchFace : CanvasWatchFaceService() {
             val outerTickRadius = mCenterX
             for (tickIndex in 0..11) {
                 val tickRot = (tickIndex.toDouble() * Math.PI * 2.0 / 12).toFloat()
-                val innerX = Math.sin(tickRot.toDouble()).toFloat() * innerTickRadius
-                val innerY = (-Math.cos(tickRot.toDouble())).toFloat() * innerTickRadius
-                val outerX = Math.sin(tickRot.toDouble()).toFloat() * outerTickRadius
-                val outerY = (-Math.cos(tickRot.toDouble())).toFloat() * outerTickRadius
+                val innerX = sin(tickRot.toDouble()).toFloat() * innerTickRadius
+                val innerY = (-cos(tickRot.toDouble())).toFloat() * innerTickRadius
+                val outerX = sin(tickRot.toDouble()).toFloat() * outerTickRadius
+                val outerY = (-cos(tickRot.toDouble())).toFloat() * outerTickRadius
                 canvas.drawLine(
                     mCenterX + innerX, mCenterY + innerY,
                     mCenterX + outerX, mCenterY + outerY, mTickAndCirclePaint
@@ -472,7 +473,7 @@ class MyWatchFace : CanvasWatchFaceService() {
 
             if (visible) {
                 registerReceiver()
-                /* Update time zone in case it changed while we weren"t visible. */
+                /* Update time zone in case it changed while we weren't visible. */
                 mCalendar.timeZone = TimeZone.getDefault()
                 invalidate()
             } else {
@@ -514,6 +515,7 @@ class MyWatchFace : CanvasWatchFaceService() {
          * Returns whether the [.mUpdateTimeHandler] timer should be running. The timer
          * should only run in active mode.
          */
+        @RequiresApi(Build.VERSION_CODES.ECLAIR_MR1)
         private fun shouldTimerBeRunning(): Boolean {
             return isVisible && !mAmbient
         }
